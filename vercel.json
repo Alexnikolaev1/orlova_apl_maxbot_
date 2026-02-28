@@ -2,23 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/webhook.py",
+      "src": "webhook.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/api/webhook",
-      "dest": "api/webhook.py"
+      "dest": "webhook.py"
     },
     {
       "src": "/",
-      "dest": "api/webhook.py"
+      "dest": "webhook.py"
     }
-  ],
-  "env": {
-    "BOT_TOKEN": "@bot_token",
-    "GALINA_CHAT_ID": "@galina_chat_id",
-    "GALINA_TELEGRAM_LINK": "@galina_telegram_link"
-  }
+  ]
 }

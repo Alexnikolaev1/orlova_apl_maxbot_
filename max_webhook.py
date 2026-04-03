@@ -51,8 +51,10 @@ class handler(BaseHTTPRequestHandler):
 
         try:
             asyncio.run(_handle(data))
-        except Exception:
-            logger.exception("MAX: ошибка обработки update (см. traceback выше)")
+        except Exception as e:
+            # В Runtime Logs смотри строку «MAX webhook failed» и traceback ниже
+            logger.error("MAX webhook failed: %s: %s", type(e).__name__, e)
+            logger.exception("MAX: traceback")
             self._respond(500, "Internal Error")
             return
 

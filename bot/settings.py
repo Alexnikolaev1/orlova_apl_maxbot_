@@ -114,6 +114,8 @@ def _validate_settings(settings: Settings) -> None:
             "`GALINA_CHAT_ID` — положительный id: в Telegram это user id, в MAX — user id для пересылки обращений."
         )
 
+    # Пустые значения не валидируем как URL — иначе на Vercel (только MAX_BOT_TOKEN) каждый POST даёт 500.
+    # Для продакшена лучше заполнить все ссылки в Environment Variables.
     for field_name, value in {
         "GALINA_TELEGRAM_LINK": settings.galina_telegram_link,
         "GALINA_CHANNEL_LINK": settings.galina_channel_link,
@@ -121,6 +123,8 @@ def _validate_settings(settings: Settings) -> None:
         "MY_SITE": settings.my_site,
         "SHOP_CATALOG": settings.shop_catalog,
     }.items():
+        if not value.strip():
+            continue
         if not _is_valid_url(value):
             errors.append(f"`{field_name}` должен быть корректным URL (http/https).")
 

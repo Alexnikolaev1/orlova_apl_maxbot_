@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from bot.settings import Settings
 
@@ -19,18 +19,46 @@ CONTACTS = "📞 Контакты"
 
 BACK_TO_MENU_CALLBACK = "back_to_menu"
 
+# callback_data главного меню (как в MAX) — не зависит от текста/эмодзи в клиенте
+CB_MAIN = "m:main"
+CB_ABOUT_ME = "m:about_me"
+CB_ABOUT_COMPANY = "m:about_company"
+CB_ABOUT_PRODUCT = "m:about_product"
+CB_CERT = "m:cert"
+CB_GEO = "m:geo"
+CB_CONCERN = "m:concern"
+CB_REG = "m:reg"
+CB_PRICES = "m:prices"
+CB_CONTACTS = "m:contacts"
 
-def main_menu() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
+# Один regex для CallbackQueryHandler (все пункты кроме concern — его ведёт ConversationHandler)
+MENU_CALLBACK_PATTERN = (
+    r"^m:(about_me|about_company|about_product|cert|geo|reg|prices|contacts)$"
+)
+
+
+def main_menu() -> InlineKeyboardMarkup:
+    """Главное меню: inline-кнопки со стабильным callback_data (не reply-клавиатура)."""
+    return InlineKeyboardMarkup(
         [
-            [KeyboardButton(ABOUT_ME), KeyboardButton(ABOUT_COMPANY)],
-            [KeyboardButton(ABOUT_PRODUCT), KeyboardButton(CERTIFICATES)],
-            [KeyboardButton(GEOGRAPHY), KeyboardButton(CONCERN)],
-            [KeyboardButton(REGISTRATION), KeyboardButton(PRICES)],
-            [KeyboardButton(CONTACTS)],
-        ],
-        resize_keyboard=True,
-        one_time_keyboard=False,
+            [
+                InlineKeyboardButton(ABOUT_ME, callback_data=CB_ABOUT_ME),
+                InlineKeyboardButton(ABOUT_COMPANY, callback_data=CB_ABOUT_COMPANY),
+            ],
+            [
+                InlineKeyboardButton(ABOUT_PRODUCT, callback_data=CB_ABOUT_PRODUCT),
+                InlineKeyboardButton(CERTIFICATES, callback_data=CB_CERT),
+            ],
+            [
+                InlineKeyboardButton(GEOGRAPHY, callback_data=CB_GEO),
+                InlineKeyboardButton(CONCERN, callback_data=CB_CONCERN),
+            ],
+            [
+                InlineKeyboardButton(REGISTRATION, callback_data=CB_REG),
+                InlineKeyboardButton(PRICES, callback_data=CB_PRICES),
+            ],
+            [[InlineKeyboardButton(CONTACTS, callback_data=CB_CONTACTS)]],
+        ]
     )
 
 

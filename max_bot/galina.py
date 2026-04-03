@@ -12,6 +12,16 @@ from bot.keyboards import (
     ABOUT_COMPANY,
     ABOUT_ME,
     ABOUT_PRODUCT,
+    CB_ABOUT_COMPANY,
+    CB_ABOUT_ME,
+    CB_ABOUT_PRODUCT,
+    CB_CERT,
+    CB_CONCERN,
+    CB_CONTACTS,
+    CB_GEO,
+    CB_MAIN,
+    CB_PRICES,
+    CB_REG,
     CERTIFICATES,
     CONCERN,
     CONTACTS,
@@ -21,18 +31,6 @@ from bot.keyboards import (
 )
 from bot.menu_filters import norm_menu_text
 from bot.settings import Settings
-
-# Callback payloads (внутренние, не видны пользователю)
-CB_MAIN = "m:main"
-CB_ABOUT_ME = "m:about_me"
-CB_ABOUT_COMPANY = "m:about_company"
-CB_ABOUT_PRODUCT = "m:about_product"
-CB_CERT = "m:cert"
-CB_GEO = "m:geo"
-CB_CONCERN = "m:concern"
-CB_REG = "m:reg"
-CB_PRICES = "m:prices"
-CB_CONTACTS = "m:contacts"
 
 
 def _cb(text: str, payload: str) -> dict[str, Any]:

@@ -6,7 +6,7 @@ import logging
 from typing import Any
 from pathlib import Path
 
-from telegram import Update
+from telegram import InlineKeyboardMarkup, Update
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
@@ -22,10 +22,20 @@ from bot.keyboards import (
     ABOUT_ME,
     ABOUT_PRODUCT,
     BACK_TO_MENU_CALLBACK,
+    CB_ABOUT_COMPANY,
+    CB_ABOUT_ME,
+    CB_ABOUT_PRODUCT,
+    CB_CERT,
+    CB_CONCERN,
+    CB_CONTACTS,
+    CB_GEO,
+    CB_PRICES,
+    CB_REG,
     CERTIFICATES,
     CONCERN,
     CONTACTS,
     GEOGRAPHY,
+    MENU_CALLBACK_PATTERN,
     PRICES,
     REGISTRATION,
     back_to_menu_inline,
@@ -53,6 +63,21 @@ class BotHandlers:
         self._menu_photo_path = Path(__file__).resolve().parent.parent / "orlova.jpg"
         # Заполняется в register_handlers: пункты главного меню при ожидании текста «Что беспокоит?»
         self._menu_handlers: dict[str, Any] = {}
+
+    async def _reply_section(
+        self,
+        update: Update,
+        text: str,
+        reply_markup: InlineKeyboardMarkup | None = None,
+    ) -> None:
+        """Ответ раздела: и из текста, и из callback inline-меню (у callback нет message)."""
+        if update.callback_query:
+            await update.callback_query.answer()
+            if update.effective_message:
+                await update.effective_message.reply_text(text, reply_markup=reply_markup)
+            return
+        if update.message:
+            await update.message.reply_text(text, reply_markup=reply_markup)
 
     async def _send_main_menu(self, update: Update, text: str) -> None:
         """Send main menu with photo if available."""
@@ -99,8 +124,7 @@ class BotHandlers:
             f"Переходи в мой Telegram-канал: {self.settings.galina_channel_link}\n\n"
             f"Всю остальную информацию можно найти на проверенном сайте: {self.settings.official_site}"
         )
-        if update.message:
-            await update.message.reply_text(text, reply_markup=channel_and_menu_inline(self.settings))
+        await self._reply_section(update, text, channel_and_menu_inline(self.settings))
 
     async def show_about_company(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         del context
@@ -121,8 +145,7 @@ class BotHandlers:
             "бэк-офисе есть база для обучения, а в интернете — тысячи видео с результатами "
             "приёма драже."
         )
-        if update.message:
-            await update.message.reply_text(text, reply_markup=back_to_menu_inline())
+        await self._reply_section(update, text, back_to_menu_inline())
 
     async def show_about_product(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         del context
@@ -135,8 +158,7 @@ class BotHandlers:
             "Полный список драже и всей продукции с описанием состава и ценами смотри в "
             f"официальном интернет-магазине: {self.settings.shop_catalog}"
         )
-        if update.message:
-            await update.message.reply_text(text, reply_markup=shop_and_contact_inline(self.settings))
+        await self._reply_section(update, text, shop_and_contact_inline(self.settings))
 
     async def show_certificates(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         del context
@@ -146,8 +168,7 @@ class BotHandlers:
             "Детальную информацию о сертификатах можно найти на главном сайте компании в "
             f"соответствующем разделе: {self.settings.official_site}"
         )
-        if update.message:
-            await update.message.reply_text(text, reply_markup=back_to_menu_inline())
+        await self._reply_section(update, text, back_to_menu_inline())
 
     async def show_geography(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         del context
@@ -156,8 +177,7 @@ class BotHandlers:
             "Продукция компании APL GO распространяется в 76 странах мира. "
             "Нас становится больше с каждым днём! 🚀"
         )
-        if update.message:
-            await update.message.reply_text(text, reply_markup=back_to_menu_inline())
+        await self._reply_section(update, text, back_to_menu_inline())
 
     async def show_registration(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         del context
@@ -167,8 +187,7 @@ class BotHandlers:
             "зарегистрироваться. Я лично помогу тебе с этим и проконсультирую.\n\n"
             "👇 Напиши мне в личные сообщения, и мы начнём прямо сейчас!"
         )
-        if update.message:
-            await update.message.reply_text(text, reply_markup=register_inline(self.settings))
+        await self._reply_section(update, text, register_inline(self.settings))
 
     async def show_prices(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         del context
@@ -177,8 +196,7 @@ class BotHandlers:
             "Актуальные цены на всю продукцию всегда представлены в нашем официальном "
             f"интернет-магазине. Ты можешь посмотреть их здесь: {self.settings.shop_catalog}"
         )
-        if update.message:
-            await update.message.reply_text(text, reply_markup=shop_and_contact_inline(self.settings))
+        await self._reply_section(update, text, shop_and_contact_inline(self.settings))
 
     async def show_contacts(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         del context
@@ -193,8 +211,30 @@ class BotHandlers:
             f"🛒 Интернет-магазин: {self.settings.shop_catalog}\n"
             f"📞 Мой телефон: +7 913 958 6418\n"
         )
-        if update.message:
-            await update.message.reply_text(text, reply_markup=contacts_inline(self.settings))
+        await self._reply_section(update, text, contacts_inline(self.settings))
+
+    async def route_main_menu_callback(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
+        """Пункты главного меню по callback_data (кроме «Что беспокоит?» — там ConversationHandler)."""
+        q = update.callback_query
+        if not q or not q.data:
+            return
+        routes = {
+            CB_ABOUT_ME: self.show_about_me,
+            CB_ABOUT_COMPANY: self.show_about_company,
+            CB_ABOUT_PRODUCT: self.show_about_product,
+            CB_CERT: self.show_certificates,
+            CB_GEO: self.show_geography,
+            CB_REG: self.show_registration,
+            CB_PRICES: self.show_prices,
+            CB_CONTACTS: self.show_contacts,
+        }
+        fn = routes.get(q.data)
+        if fn:
+            await fn(update, context)
+        else:
+            await q.answer()
 
     async def concern_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         del context
@@ -205,8 +245,7 @@ class BotHandlers:
             "А пока можешь посмотреть каталог продукции, чтобы понять, какие натуральные "
             f"компоненты могут помочь в твоей ситуации: {self.settings.shop_catalog}"
         )
-        if update.message:
-            await update.message.reply_text(text, reply_markup=shop_and_contact_inline(self.settings))
+        await self._reply_section(update, text, shop_and_contact_inline(self.settings))
         return WAITING_FOR_CONCERN
 
     async def concern_receive(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -295,10 +334,11 @@ def register_handlers(app: Application, settings: Settings) -> None:
 
     concern_conv = ConversationHandler(
         entry_points=[
+            CallbackQueryHandler(handlers.concern_start, pattern=f"^{CB_CONCERN}$"),
             MessageHandler(
                 filters.TEXT & ~filters.COMMAND & ExactReplyButtonText(CONCERN),
                 handlers.concern_start,
-            )
+            ),
         ],
         states={
             WAITING_FOR_CONCERN: [
@@ -310,6 +350,9 @@ def register_handlers(app: Application, settings: Settings) -> None:
 
     app.add_handler(CommandHandler("start", handlers.start))
     app.add_handler(concern_conv)
+    app.add_handler(
+        CallbackQueryHandler(handlers.route_main_menu_callback, pattern=MENU_CALLBACK_PATTERN)
+    )
 
     menu_routes = {
         ABOUT_ME: handlers.show_about_me,

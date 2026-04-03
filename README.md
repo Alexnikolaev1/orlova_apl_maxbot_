@@ -79,3 +79,5 @@ python set_max_subscription.py --url https://your-project.vercel.app
 ```bash
 python set_webhook.py --url https://your-project.vercel.app
 ```
+
+Пример продакшен-домена MAX-деплоя: [orlovaaplmaxbot.vercel.app](https://orlovaaplmaxbot.vercel.app).

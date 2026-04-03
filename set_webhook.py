@@ -10,7 +10,7 @@
 
 import argparse
 import asyncio
-from telegram import Bot
+from telegram import Bot, Update
 
 
 async def set_webhook(token: str, webhook_url: str):
@@ -22,7 +22,11 @@ async def set_webhook(token: str, webhook_url: str):
 
     # Устанавливаем новый
     full_url = f"{webhook_url.rstrip('/')}/api/webhook"
-    result = await bot.set_webhook(url=full_url)
+    # Явно запрашиваем callback_query — иначе при старой настройке inline-кнопки не приходят
+    result = await bot.set_webhook(
+        url=full_url,
+        allowed_updates=Update.ALL_TYPES,
+    )
 
     if result:
         print(f"✅ Вебхук успешно установлен: {full_url}")

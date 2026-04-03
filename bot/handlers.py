@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import re
+from typing import Any
 from pathlib import Path
 
 from telegram import Update
@@ -49,6 +51,8 @@ class BotHandlers:
         self.settings = settings
         self._main_menu = main_menu()
         self._menu_photo_path = Path(__file__).resolve().parent.parent / "orlova.jpg"
+        # Заполняется в register_handlers: пункты главного меню при ожидании текста «Что беспокоит?»
+        self._menu_handlers: dict[str, Any] = {}
 
     async def _send_main_menu(self, update: Update, text: str) -> None:
         """Send main menu with photo if available."""
@@ -209,8 +213,15 @@ class BotHandlers:
         if not update.message:
             return ConversationHandler.END
 
+        text = (update.message.text or "").strip()
+        if text in self._menu_handlers:
+            result = await self._menu_handlers[text](update, context)
+            if result == WAITING_FOR_CONCERN:
+                return WAITING_FOR_CONCERN
+            return ConversationHandler.END
+
         user = update.effective_user
-        concern_text = update.message.text or ""
+        concern_text = text
         forward_text = (
             "📩 Новое обращение от пользователя!\n\n"
             f"👤 Имя: {user.full_name if user else 'неизвестно'}\n"
@@ -278,11 +289,16 @@ class BotHandlers:
         await self._send_main_menu(update, text)
 
 
+def _reply_button_regex(label: str) -> re.Pattern[str]:
+    """Точное совпадение текста кнопки (в т.ч. «?» и другие символы regex)."""
+    return re.compile("^" + re.escape(label) + "$")
+
+
 def register_handlers(app: Application, settings: Settings) -> None:
     handlers = BotHandlers(settings)
 
     concern_conv = ConversationHandler(
-        entry_points=[MessageHandler(filters.Regex(f"^{CONCERN}$"), handlers.concern_start)],
+        entry_points=[MessageHandler(filters.Regex(_reply_button_regex(CONCERN)), handlers.concern_start)],
         states={
             WAITING_FOR_CONCERN: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, handlers.concern_receive),
@@ -304,8 +320,9 @@ def register_handlers(app: Application, settings: Settings) -> None:
         PRICES: handlers.show_prices,
         CONTACTS: handlers.show_contacts,
     }
+    handlers._menu_handlers = {**menu_routes, CONCERN: handlers.concern_start}
     for button, callback in menu_routes.items():
-        app.add_handler(MessageHandler(filters.Regex(f"^{button}$"), callback))
+        app.add_handler(MessageHandler(filters.Regex(_reply_button_regex(button)), callback))
 
     app.add_handler(CallbackQueryHandler(handlers.back_to_menu_callback, pattern=f"^{BACK_TO_MENU_CALLBACK}$"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handlers.unknown_text))

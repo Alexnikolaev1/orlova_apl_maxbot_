@@ -10,6 +10,8 @@ from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
+from bot.tg_token import telegram_bot_token_from_env
+
 TOKEN_PLACEHOLDER = "YOUR_BOT_TOKEN_HERE"
 
 
@@ -32,7 +34,7 @@ def load_settings() -> Settings:
     load_dotenv()
     legacy = _import_legacy_config()
     settings = Settings(
-        bot_token=_read_str("BOT_TOKEN", legacy, TOKEN_PLACEHOLDER),
+        bot_token=_read_telegram_bot_token(legacy),
         max_bot_token=_read_str("MAX_BOT_TOKEN", legacy, ""),
         galina_chat_id=_read_int("GALINA_CHAT_ID", legacy, 0),
         galina_telegram_link=_read_str("GALINA_TELEGRAM_LINK", legacy, ""),
@@ -56,6 +58,16 @@ def _import_legacy_config() -> ModuleType | None:
         return importlib.import_module("config")
     except ModuleNotFoundError:
         return None
+
+
+def _read_telegram_bot_token(legacy: ModuleType | None) -> str:
+    """BOT_TOKEN / TELEGRAM_BOT_TOKEN в .env, иначе legacy config.BOT_TOKEN."""
+    v = telegram_bot_token_from_env()
+    if v:
+        return v
+    if legacy is not None and hasattr(legacy, "BOT_TOKEN"):
+        return str(getattr(legacy, "BOT_TOKEN")).strip()
+    return TOKEN_PLACEHOLDER
 
 
 def _read_str(name: str, legacy: ModuleType | None, default: str) -> str:
@@ -92,7 +104,10 @@ def _validate_settings(settings: Settings) -> None:
     has_tg = bool(settings.bot_token and settings.bot_token != TOKEN_PLACEHOLDER)
     has_max = bool(settings.max_bot_token)
     if not has_tg and not has_max:
-        errors.append("Укажите `BOT_TOKEN` (Telegram) и/или `MAX_BOT_TOKEN` (мессенджер MAX).")
+        errors.append(
+            "Укажите `BOT_TOKEN` или `TELEGRAM_BOT_TOKEN` (Telegram, токен @BotFather) "
+            "и/или `MAX_BOT_TOKEN` (мессенджер MAX). Это разные токены."
+        )
 
     if settings.galina_chat_id <= 0:
         errors.append(

@@ -20,20 +20,22 @@ from telegram.ext import Application, ContextTypes
 # Импортируем регистратор обработчиков из handlers.py
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from bot.tg_token import telegram_bot_token_from_env
 from handlers import register_handlers
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ─── Читаем конфиг из переменных окружения (Vercel Environment Variables) ────
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
-
 def _build_application() -> Application:
     """Новый Application на каждый POST: asyncio.run() каждый раз создаёт новый event loop,
     а клиент Bot/httpx привязан к циклу — нельзя переиспользовать один и тот же Application."""
-    if not BOT_TOKEN.strip():
-        raise RuntimeError("BOT_TOKEN пустой в окружении Vercel")
-    app = Application.builder().token(BOT_TOKEN).build()
+    token = telegram_bot_token_from_env()
+    if not token:
+        raise RuntimeError(
+            "Нет токена Telegram: задайте BOT_TOKEN или TELEGRAM_BOT_TOKEN в Vercel. "
+            "MAX_BOT_TOKEN — другой токен (только для мессенджера MAX), для вебхука Telegram не подходит."
+        )
+    app = Application.builder().token(token).build()
     register_handlers(app)
 
     async def _on_error(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:

@@ -42,7 +42,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--token",
         default=None,
-        help="Токен бота (если не указан, читается из переменной окружения BOT_TOKEN)",
+        help="Токен Telegram (если не указан: BOT_TOKEN или TELEGRAM_BOT_TOKEN в окружении)",
     )
     parser.add_argument(
         "--url",
@@ -52,9 +52,17 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     import os
-    token = args.token or os.environ.get("BOT_TOKEN")
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from bot.tg_token import telegram_bot_token_from_env
+
+    token = args.token or telegram_bot_token_from_env()
     if not token:
-        print("❌ Укажите токен через --token или переменную окружения BOT_TOKEN")
+        print(
+            "❌ Укажите токен через --token или переменные BOT_TOKEN / TELEGRAM_BOT_TOKEN "
+            "(токен Telegram от @BotFather). MAX_BOT_TOKEN — только для MAX, не для set_webhook."
+        )
         exit(1)
 
     asyncio.run(set_webhook(token, args.url))

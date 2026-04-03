@@ -126,7 +126,7 @@ async def _route_menu_payload(
         g.CB_GEO: (g.text_geography(), [g.attachment_back_only()]),
         g.CB_REG: (g.text_registration(), [g.attachment_register(settings)]),
         g.CB_PRICES: (g.text_prices(settings), [g.attachment_shop_and_contact(settings)]),
-        g.CB_CONTACTS: (g.text_contacts(settings), [g.attachment_shop_and_contact(settings)]),
+        g.CB_CONTACTS: (g.text_contacts(settings), [g.attachment_contacts(settings)]),
     }
 
     if payload == g.CB_CONCERN:

@@ -29,6 +29,7 @@ from bot.keyboards import (
     REGISTRATION,
     back_to_menu_inline,
     channel_and_menu_inline,
+    contacts_inline,
     main_menu,
     register_inline,
     shop_and_contact_inline,
@@ -177,18 +178,19 @@ class BotHandlers:
 
     async def show_contacts(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         del context
+        u = self.settings.galina_telegram_username.lstrip("@")
         text = (
             "📞 Контакты\n\n"
             "Всегда на связи! 💬\n\n"
             f"📣 Мой Telegram-канал: {self.settings.galina_channel_link}\n"
-            f"✉️ Мой личный Telegram (для связи и регистрации): {self.settings.galina_telegram_link}\n"
+            f"✉️ Мой личный Telegram: @{u}\n"
             f"🌐 Официальный сайт компании: {self.settings.official_site}\n"
             f"✍️ Мой личный сайт с блогом: {self.settings.my_site}\n"
             f"🛒 Интернет-магазин: {self.settings.shop_catalog}\n"
             f"📞 Мой телефон: +7 913 958 6418\n"
         )
         if update.message:
-            await update.message.reply_text(text, reply_markup=shop_and_contact_inline(self.settings))
+            await update.message.reply_text(text, reply_markup=contacts_inline(self.settings))
 
     async def concern_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         del context

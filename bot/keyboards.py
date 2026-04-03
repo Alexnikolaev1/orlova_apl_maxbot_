@@ -53,7 +53,36 @@ def shop_and_contact_inline(settings: Settings) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [
             [InlineKeyboardButton("🛒 Открыть каталог", url=settings.shop_catalog)],
-            [InlineKeyboardButton("✉️ Написать Галине лично", url=settings.galina_telegram_link)],
+            [
+                InlineKeyboardButton(
+                    "✉️ Написать Галине лично в Телеграм", url=settings.galina_telegram_link
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "✉️ Написать Галине лично в МАХ", url=settings.galina_max_contact_link
+                )
+            ],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data=BACK_TO_MENU_CALLBACK)],
+        ]
+    )
+
+
+def contacts_inline(settings: Settings) -> InlineKeyboardMarkup:
+    """Раздел «Контакты»: ссылки на канал, личку в Telegram и в MAX."""
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton("📣 Telegram-канал", url=settings.galina_channel_link)],
+            [
+                InlineKeyboardButton(
+                    "✉️ Мой личный Telegram", url=settings.galina_telegram_link
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "✉️ Мой личный MAX (+79287603233)", url=settings.galina_max_contact_link
+                )
+            ],
             [InlineKeyboardButton("🏠 Главное меню", callback_data=BACK_TO_MENU_CALLBACK)],
         ]
     )
@@ -62,7 +91,18 @@ def shop_and_contact_inline(settings: Settings) -> InlineKeyboardMarkup:
 def register_inline(settings: Settings) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("✉️ Написать Галине для регистрации", url=settings.galina_telegram_link)],
+            [
+                InlineKeyboardButton(
+                    "✉️ Написать Галине для регистрации в Телеграм",
+                    url=settings.galina_telegram_link,
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "✉️ Написать Галине для регистрации в МАХ",
+                    url=settings.galina_max_contact_link,
+                )
+            ],
             [InlineKeyboardButton("🏠 Главное меню", callback_data=BACK_TO_MENU_CALLBACK)],
         ]
     )

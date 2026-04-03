@@ -36,7 +36,9 @@ pip install -r requirements.txt
 
 - `BOT_TOKEN` (Telegram) и/или `MAX_BOT_TOKEN` (мессенджер MAX)
 - `GALINA_CHAT_ID`
-- `GALINA_TELEGRAM_LINK`
+- `GALINA_TELEGRAM_LINK` (например `https://t.me/Orlova_Gal`)
+- `GALINA_TELEGRAM_USERNAME` (без `@`, например `Orlova_Gal` — как показывается в разделе «Контакты»)
+- `GALINA_MAX_CONTACT_LINK` (опционально, по умолчанию `tel:+79287603233` — кнопка «в МАХ»)
 - `GALINA_CHANNEL_LINK`
 - `OFFICIAL_SITE`
 - `SHOP_CATALOG`

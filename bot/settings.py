@@ -19,6 +19,8 @@ class Settings:
     max_bot_token: str
     galina_chat_id: int
     galina_telegram_link: str
+    galina_telegram_username: str
+    galina_max_contact_link: str
     galina_channel_link: str
     official_site: str
     my_site: str
@@ -34,6 +36,12 @@ def load_settings() -> Settings:
         max_bot_token=_read_str("MAX_BOT_TOKEN", legacy, ""),
         galina_chat_id=_read_int("GALINA_CHAT_ID", legacy, 0),
         galina_telegram_link=_read_str("GALINA_TELEGRAM_LINK", legacy, ""),
+        galina_telegram_username=_read_str(
+            "GALINA_TELEGRAM_USERNAME", legacy, "Orlova_Gal"
+        ),
+        galina_max_contact_link=_read_str(
+            "GALINA_MAX_CONTACT_LINK", legacy, "tel:+79287603233"
+        ),
         galina_channel_link=_read_str("GALINA_CHANNEL_LINK", legacy, ""),
         official_site=_read_str("OFFICIAL_SITE", legacy, ""),
         my_site=_read_str("MY_SITE", legacy, ""),
@@ -101,6 +109,13 @@ def _validate_settings(settings: Settings) -> None:
         if not _is_valid_url(value):
             errors.append(f"`{field_name}` должен быть корректным URL (http/https).")
 
+    if settings.galina_max_contact_link and not _is_valid_tel_or_https_url(
+        settings.galina_max_contact_link
+    ):
+        errors.append(
+            "`GALINA_MAX_CONTACT_LINK` — ссылка `tel:...` или https (контакт в МАХ)."
+        )
+
     if errors:
         joined = "\n- ".join(errors)
         raise ValueError(f"Ошибка конфигурации:\n- {joined}")
@@ -109,4 +124,11 @@ def _validate_settings(settings: Settings) -> None:
 def _is_valid_url(value: str) -> bool:
     parsed = urlparse(value)
     return bool(parsed.scheme in {"http", "https"} and parsed.netloc)
+
+
+def _is_valid_tel_or_https_url(value: str) -> bool:
+    v = value.strip()
+    if v.lower().startswith("tel:"):
+        return len(v) > 4
+    return _is_valid_url(v)
 

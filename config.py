@@ -11,7 +11,11 @@ MAX_BOT_TOKEN = ""
 GALINA_CHAT_ID = 123456789  # замените на реальный ID
 
 # Личный Telegram Галины (для кнопок и ссылок)
-GALINA_TELEGRAM_LINK = "https://t.me/YOUR_TELEGRAM_USERNAME"  # замените
+GALINA_TELEGRAM_LINK = "https://t.me/Orlova_Gal"
+GALINA_TELEGRAM_USERNAME = "Orlova_Gal"  # отображение в тексте: @Orlova_Gal
+
+# Контакт в МАХ (кнопка «Написать в МАХ»): tel: или https
+GALINA_MAX_CONTACT_LINK = "tel:+79287603233"
 
 # Телеграм-канал Галины
 GALINA_CHANNEL_LINK = "https://t.me/galoAPL"
@@ -20,7 +24,7 @@ GALINA_CHANNEL_LINK = "https://t.me/galoAPL"
 OFFICIAL_SITE = "https://ru.aplgo.com/ru/"
 
 # Личный сайт Галины
-MY_SITE = "https://example.com"  # замените
+MY_SITE = "https://orlovaapl.vercel.app/"
 
 # Интернет-магазин (каталог)
 SHOP_CATALOG = "https://aplshop.com/j/534361/catalog/"

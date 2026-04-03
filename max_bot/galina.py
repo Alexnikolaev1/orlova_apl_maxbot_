@@ -74,7 +74,20 @@ def attachment_shop_and_contact(settings: Settings) -> dict[str, Any]:
     return _inline_kb(
         [
             [_link("🛒 Открыть каталог", settings.shop_catalog)],
-            [_link("✉️ Написать Галине лично", settings.galina_telegram_link)],
+            [_link("✉️ Написать Галине лично в Телеграм", settings.galina_telegram_link)],
+            [_link("✉️ Написать Галине лично в МАХ", settings.galina_max_contact_link)],
+            [_cb("🏠 Главное меню", CB_MAIN)],
+        ]
+    )
+
+
+def attachment_contacts(settings: Settings) -> dict[str, Any]:
+    """Кнопки для раздела «Контакты» (как contacts_inline в Telegram)."""
+    return _inline_kb(
+        [
+            [_link("📣 Telegram-канал", settings.galina_channel_link)],
+            [_link("✉️ Мой личный Telegram", settings.galina_telegram_link)],
+            [_link("✉️ Мой личный MAX (+79287603233)", settings.galina_max_contact_link)],
             [_cb("🏠 Главное меню", CB_MAIN)],
         ]
     )
@@ -83,7 +96,8 @@ def attachment_shop_and_contact(settings: Settings) -> dict[str, Any]:
 def attachment_register(settings: Settings) -> dict[str, Any]:
     return _inline_kb(
         [
-            [_link("✉️ Написать Галине для регистрации", settings.galina_telegram_link)],
+            [_link("✉️ Написать Галине для регистрации в Телеграм", settings.galina_telegram_link)],
+            [_link("✉️ Написать Галине для регистрации в МАХ", settings.galina_max_contact_link)],
             [_cb("🏠 Главное меню", CB_MAIN)],
         ]
     )
@@ -190,11 +204,12 @@ def text_prices(settings: Settings) -> str:
 
 
 def text_contacts(settings: Settings) -> str:
+    u = settings.galina_telegram_username.lstrip("@")
     return (
         "📞 Контакты\n\n"
         "Всегда на связи! 💬\n\n"
         f"📣 Мой Telegram-канал: {settings.galina_channel_link}\n"
-        f"✉️ Мой личный Telegram (для связи и регистрации): {settings.galina_telegram_link}\n"
+        f"✉️ Мой личный Telegram: @{u}\n"
         f"🌐 Официальный сайт компании: {settings.official_site}\n"
         f"✍️ Мой личный сайт с блогом: {settings.my_site}\n"
         f"🛒 Интернет-магазин: {settings.shop_catalog}\n"

@@ -167,17 +167,25 @@ async def process_max_update(update: dict, settings: Settings, client: MaxApiCli
     if ut == "message_callback":
         cb = update.get("callback") or {}
         payload = cb.get("payload")
+        callback_id = cb.get("callback_id")
         u = cb.get("user") or {}
         wname = ((u.get("first_name") or "друг").strip() or "друг")
-        if isinstance(payload, str):
-            await _route_menu_payload(
-                payload,
-                client,
-                settings,
-                user_id=user_id,
-                chat_id=chat_id,
-                welcome_name=wname,
-            )
+        try:
+            if isinstance(payload, str):
+                await _route_menu_payload(
+                    payload,
+                    client,
+                    settings,
+                    user_id=user_id,
+                    chat_id=chat_id,
+                    welcome_name=wname,
+                )
+        finally:
+            if callback_id:
+                try:
+                    await client.answer_callback(str(callback_id))
+                except Exception:
+                    logger.exception("MAX: не удалось подтвердить нажатие кнопки (POST /answers)")
         return
 
     if ut != "message_created":
@@ -236,8 +244,8 @@ async def process_max_update(update: dict, settings: Settings, client: MaxApiCli
         )
         return
 
-    if lower.startswith("/start") or text in g.LABEL_TO_CB:
-        pl = g.LABEL_TO_CB.get(text)
+    pl = g.payload_for_menu_label(text)
+    if lower.startswith("/start") or pl is not None:
         if pl:
             await _route_menu_payload(pl, client, settings, user_id=user_id, chat_id=chat_id)
             return

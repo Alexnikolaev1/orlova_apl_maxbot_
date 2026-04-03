@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Any
 from pathlib import Path
 
@@ -36,6 +35,7 @@ from bot.keyboards import (
     register_inline,
     shop_and_contact_inline,
 )
+from bot.menu_filters import ExactReplyButtonText, norm_menu_text
 from bot.settings import Settings
 
 
@@ -214,8 +214,9 @@ class BotHandlers:
             return ConversationHandler.END
 
         text = (update.message.text or "").strip()
-        if text in self._menu_handlers:
-            result = await self._menu_handlers[text](update, context)
+        key = norm_menu_text(text)
+        if key in self._menu_handlers:
+            result = await self._menu_handlers[key](update, context)
             if result == WAITING_FOR_CONCERN:
                 return WAITING_FOR_CONCERN
             return ConversationHandler.END
@@ -289,16 +290,16 @@ class BotHandlers:
         await self._send_main_menu(update, text)
 
 
-def _reply_button_regex(label: str) -> re.Pattern[str]:
-    """Точное совпадение текста кнопки (в т.ч. «?» и другие символы regex)."""
-    return re.compile("^" + re.escape(label) + "$")
-
-
 def register_handlers(app: Application, settings: Settings) -> None:
     handlers = BotHandlers(settings)
 
     concern_conv = ConversationHandler(
-        entry_points=[MessageHandler(filters.Regex(_reply_button_regex(CONCERN)), handlers.concern_start)],
+        entry_points=[
+            MessageHandler(
+                filters.TEXT & ~filters.COMMAND & ExactReplyButtonText(CONCERN),
+                handlers.concern_start,
+            )
+        ],
         states={
             WAITING_FOR_CONCERN: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, handlers.concern_receive),
@@ -320,9 +321,16 @@ def register_handlers(app: Application, settings: Settings) -> None:
         PRICES: handlers.show_prices,
         CONTACTS: handlers.show_contacts,
     }
-    handlers._menu_handlers = {**menu_routes, CONCERN: handlers.concern_start}
+    handlers._menu_handlers = {
+        norm_menu_text(k): v for k, v in {**menu_routes, CONCERN: handlers.concern_start}.items()
+    }
     for button, callback in menu_routes.items():
-        app.add_handler(MessageHandler(filters.Regex(_reply_button_regex(button)), callback))
+        app.add_handler(
+            MessageHandler(
+                filters.TEXT & ~filters.COMMAND & ExactReplyButtonText(button),
+                callback,
+            )
+        )
 
     app.add_handler(CallbackQueryHandler(handlers.back_to_menu_callback, pattern=f"^{BACK_TO_MENU_CALLBACK}$"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handlers.unknown_text))

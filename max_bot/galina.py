@@ -19,6 +19,7 @@ from bot.keyboards import (
     PRICES,
     REGISTRATION,
 )
+from bot.menu_filters import norm_menu_text
 from bot.settings import Settings
 
 # Callback payloads (внутренние, не видны пользователю)
@@ -275,3 +276,12 @@ LABEL_TO_CB: dict[str, str] = {
     PRICES: CB_PRICES,
     CONTACTS: CB_CONTACTS,
 }
+
+
+def payload_for_menu_label(text: str) -> str | None:
+    """Соответствие текста (после NFC) подписи кнопки и callback payload."""
+    nt = norm_menu_text(text)
+    for label, pl in LABEL_TO_CB.items():
+        if norm_menu_text(label) == nt:
+            return pl
+    return None

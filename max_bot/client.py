@@ -73,6 +73,33 @@ class MaxApiClient:
             r.raise_for_status()
             return {}
 
+    async def answer_callback(self, callback_id: str) -> dict[str, Any]:
+        """Подтвердить нажатие inline-кнопки callback (POST /answers). Без этого клиент MAX может «зависать»."""
+        async with self._client() as c:
+            r = await c.post(
+                "/answers",
+                params={"callback_id": callback_id},
+                json={},
+            )
+            if r.status_code < 400:
+                try:
+                    data = r.json()
+                    return data if isinstance(data, dict) else {}
+                except json.JSONDecodeError:
+                    return {}
+            # Некоторые версии API принимают только непустое тело
+            r2 = await c.post(
+                "/answers",
+                params={"callback_id": callback_id},
+                json={"notification": "\u200b"},
+            )
+            r2.raise_for_status()
+            try:
+                data = r2.json()
+                return data if isinstance(data, dict) else {}
+            except json.JSONDecodeError:
+                return {}
+
     async def get_updates(
         self,
         *,

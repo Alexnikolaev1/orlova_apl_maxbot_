@@ -87,19 +87,17 @@ def _append_row_telegram_and_max(
     *,
     max_label: str | None = None,
 ) -> None:
-    """Один ряд: Telegram (ссылка) + МАХ (callback — tel: в link MAX не поддерживается)."""
-    r: list[dict[str, Any]] = []
-    u = _url_for_max_link_button(settings.galina_telegram_link)
-    if u:
-        r.append(_link(telegram_label, u))
+    """Два ряда по одной кнопке: сверху МАХ (callback), ниже Telegram (ссылка). tel: в link MAX не поддерживается."""
     if max_label is None:
         num = max_phone_local_digits(settings)
         max_text = f"✉️ Мой личный МАХ · {num}"
     else:
         max_text = max_label
-    r.append(_cb(max_text, CB_MAX_PHONE))
-    if r:
-        rows.append(r)
+    rows.append([_cb(max_text, CB_MAX_PHONE)])
+
+    u = _url_for_max_link_button(settings.galina_telegram_link)
+    if u:
+        rows.append([_link(telegram_label, u)])
 
 
 def _cb(text: str, payload: str) -> dict[str, Any]:

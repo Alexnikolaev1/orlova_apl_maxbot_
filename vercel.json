@@ -4,12 +4,20 @@
     {
       "src": "webhook.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "max_webhook.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/api/webhook",
       "dest": "webhook.py"
+    },
+    {
+      "src": "/api/max-webhook",
+      "dest": "max_webhook.py"
     },
     {
       "src": "/",

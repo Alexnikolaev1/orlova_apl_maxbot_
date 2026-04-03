@@ -16,6 +16,7 @@ TOKEN_PLACEHOLDER = "YOUR_BOT_TOKEN_HERE"
 @dataclass(frozen=True, slots=True)
 class Settings:
     bot_token: str
+    max_bot_token: str
     galina_chat_id: int
     galina_telegram_link: str
     galina_channel_link: str
@@ -30,6 +31,7 @@ def load_settings() -> Settings:
     legacy = _import_legacy_config()
     settings = Settings(
         bot_token=_read_str("BOT_TOKEN", legacy, TOKEN_PLACEHOLDER),
+        max_bot_token=_read_str("MAX_BOT_TOKEN", legacy, ""),
         galina_chat_id=_read_int("GALINA_CHAT_ID", legacy, 0),
         galina_telegram_link=_read_str("GALINA_TELEGRAM_LINK", legacy, ""),
         galina_channel_link=_read_str("GALINA_CHANNEL_LINK", legacy, ""),
@@ -79,11 +81,15 @@ def _read_int(name: str, legacy: ModuleType | None, default: int) -> int:
 def _validate_settings(settings: Settings) -> None:
     errors: list[str] = []
 
-    if not settings.bot_token or settings.bot_token == TOKEN_PLACEHOLDER:
-        errors.append("`BOT_TOKEN` не заполнен. Укажи реальный токен от @BotFather.")
+    has_tg = bool(settings.bot_token and settings.bot_token != TOKEN_PLACEHOLDER)
+    has_max = bool(settings.max_bot_token)
+    if not has_tg and not has_max:
+        errors.append("Укажите `BOT_TOKEN` (Telegram) и/или `MAX_BOT_TOKEN` (мессенджер MAX).")
 
     if settings.galina_chat_id <= 0:
-        errors.append("`GALINA_CHAT_ID` должен быть положительным числом Telegram user id.")
+        errors.append(
+            "`GALINA_CHAT_ID` — положительный id: в Telegram это user id, в MAX — user id для пересылки обращений."
+        )
 
     for field_name, value in {
         "GALINA_TELEGRAM_LINK": settings.galina_telegram_link,

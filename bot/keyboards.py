@@ -30,6 +30,8 @@ CB_CONCERN = "m:concern"
 CB_REG = "m:reg"
 CB_PRICES = "m:prices"
 CB_CONTACTS = "m:contacts"
+# Номер MAX (tel: в link MAX не работает — отдельная callback-кнопка)
+CB_MAX_PHONE = "m:max_phone"
 
 # Один regex для CallbackQueryHandler (все пункты кроме concern — его ведёт ConversationHandler)
 MENU_CALLBACK_PATTERN = (

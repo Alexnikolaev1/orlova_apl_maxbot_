@@ -21,6 +21,7 @@ from bot.keyboards import (
     CB_CONTACTS,
     CB_GEO,
     CB_MAIN,
+    CB_MAX_PHONE,
     CB_PRICES,
     CB_REG,
     CERTIFICATES,
@@ -56,6 +57,49 @@ def _append_link_row(
     u = _url_for_max_link_button(url)
     if u:
         rows.append([_link(label, u)])
+
+
+def max_phone_local_digits(settings: Settings) -> str:
+    """Номер для подписи кнопки (например 89287603233) из tel: в GALINA_MAX_CONTACT_LINK."""
+    s = settings.galina_max_contact_link.strip()
+    if s.lower().startswith("tel:"):
+        digits = "".join(c for c in s[4:] if c.isdigit())
+        if len(digits) == 11 and digits.startswith("7"):
+            return "8" + digits[1:]
+        if len(digits) == 11 and digits.startswith("8"):
+            return digits
+    return "89287603233"
+
+
+def text_max_phone_hint(settings: Settings) -> str:
+    d = max_phone_local_digits(settings)
+    if len(d) == 11 and d.startswith("8"):
+        pretty = f"+7 {d[1:4]} {d[4:7]} {d[7:9]} {d[9:11]}"
+    else:
+        pretty = d
+    return f"Напиши в MAX по номеру {d} ({pretty})."
+
+
+def _append_row_telegram_and_max(
+    rows: list[list[dict[str, Any]]],
+    settings: Settings,
+    telegram_label: str,
+    *,
+    max_label: str | None = None,
+) -> None:
+    """Один ряд: Telegram (ссылка) + МАХ (callback — tel: в link MAX не поддерживается)."""
+    r: list[dict[str, Any]] = []
+    u = _url_for_max_link_button(settings.galina_telegram_link)
+    if u:
+        r.append(_link(telegram_label, u))
+    if max_label is None:
+        num = max_phone_local_digits(settings)
+        max_text = f"✉️ Мой личный МАХ · {num}"
+    else:
+        max_text = max_label
+    r.append(_cb(max_text, CB_MAX_PHONE))
+    if r:
+        rows.append(r)
 
 
 def _cb(text: str, payload: str) -> dict[str, Any]:
@@ -95,8 +139,12 @@ def attachment_channel_and_menu(settings: Settings) -> dict[str, Any]:
 def attachment_shop_and_contact(settings: Settings) -> dict[str, Any]:
     rows: list[list[dict[str, Any]]] = []
     _append_link_row(rows, "🛒 Открыть каталог", settings.shop_catalog)
-    _append_link_row(rows, "✉️ Написать Галине лично в Телеграм", settings.galina_telegram_link)
-    _append_link_row(rows, "✉️ Написать Галине лично в МАХ", settings.galina_max_contact_link)
+    _append_row_telegram_and_max(
+        rows,
+        settings,
+        "✉️ Написать Галине лично в Телеграм",
+        max_label="✉️ Написать Галине лично в МАХ",
+    )
     rows.append([_cb("🏠 Главное меню", CB_MAIN)])
     return _inline_kb(rows)
 
@@ -105,16 +153,19 @@ def attachment_contacts(settings: Settings) -> dict[str, Any]:
     """Кнопки для раздела «Контакты» (как contacts_inline в Telegram)."""
     rows: list[list[dict[str, Any]]] = []
     _append_link_row(rows, "📣 Telegram-канал", settings.galina_channel_link)
-    _append_link_row(rows, "✉️ Мой личный Telegram", settings.galina_telegram_link)
-    _append_link_row(rows, "✉️ Мой личный MAX (+79287603233)", settings.galina_max_contact_link)
+    _append_row_telegram_and_max(rows, settings, "✉️ Мой личный Telegram")
     rows.append([_cb("🏠 Главное меню", CB_MAIN)])
     return _inline_kb(rows)
 
 
 def attachment_register(settings: Settings) -> dict[str, Any]:
     rows: list[list[dict[str, Any]]] = []
-    _append_link_row(rows, "✉️ Написать Галине для регистрации в Телеграм", settings.galina_telegram_link)
-    _append_link_row(rows, "✉️ Написать Галине для регистрации в МАХ", settings.galina_max_contact_link)
+    _append_row_telegram_and_max(
+        rows,
+        settings,
+        "✉️ Написать Галине для регистрации в Телеграм",
+        max_label="✉️ Написать Галине для регистрации в МАХ",
+    )
     rows.append([_cb("🏠 Главное меню", CB_MAIN)])
     return _inline_kb(rows)
 

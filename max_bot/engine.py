@@ -118,6 +118,16 @@ async def _route_menu_payload(
         )
         return
 
+    if payload == g.CB_MAX_PHONE:
+        await _send(
+            client,
+            user_id=user_id,
+            chat_id=chat_id,
+            text=g.text_max_phone_hint(settings),
+            attachments=[g.attachment_back_only()],
+        )
+        return
+
     mapping: dict[str, tuple[str, list[dict[str, Any]]]] = {
         g.CB_ABOUT_ME: (g.text_about_me(settings), [g.attachment_channel_and_menu(settings)]),
         g.CB_ABOUT_COMPANY: (g.text_about_company(), [g.attachment_back_only()]),

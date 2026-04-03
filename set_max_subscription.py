@@ -7,12 +7,28 @@ import argparse
 import asyncio
 import os
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 
+_ROOT = Path(__file__).resolve().parent
+
+
+def _read_max_token() -> str:
+    """Токен из .env, переменной окружения или config.py (без полной валидации Settings)."""
+    t = (os.environ.get("MAX_BOT_TOKEN") or "").strip()
+    if t:
+        return t
+    try:
+        import config as cfg
+
+        return (getattr(cfg, "MAX_BOT_TOKEN", "") or "").strip()
+    except Exception:
+        return ""
+
 
 async def main() -> None:
-    load_dotenv()
+    load_dotenv(_ROOT / ".env")
     parser = argparse.ArgumentParser(description="MAX: установить URL вебхука")
     parser.add_argument(
         "--url",
@@ -31,9 +47,14 @@ async def main() -> None:
     )
     args = parser.parse_args()
 
-    token = (args.token or os.environ.get("MAX_BOT_TOKEN", "")).strip()
+    token = (args.token or _read_max_token()).strip()
     if not token:
-        print("❌ Укажите --token или MAX_BOT_TOKEN")
+        print(
+            "❌ Не найден токен MAX.\n"
+            "   • Добавь в файл .env в корне проекта: MAX_BOT_TOKEN=твой_токен\n"
+            "     (токен в кабинете MAX: Чат-боты → Интеграция → Получить токен)\n"
+            "   • Или передай явно: python set_max_subscription.py --url ... --token ТОКЕН"
+        )
         sys.exit(1)
 
     base = args.url.rstrip("/")

@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +32,30 @@ from bot.keyboards import (
 )
 from bot.menu_filters import norm_menu_text
 from bot.settings import Settings
+
+logger = logging.getLogger(__name__)
+
+
+def _url_for_max_link_button(url: str) -> str | None:
+    """MAX API для type=link обычно принимает только http(s); tel: даёт отказ всего сообщения."""
+    u = (url or "").strip()
+    if not u:
+        return None
+    if u.lower().startswith("tel:"):
+        logger.debug("MAX: пропускаю tel:-ссылку в inline link-кнопке")
+        return None
+    if u.startswith("http://") or u.startswith("https://"):
+        return u
+    logger.warning("MAX: пропускаю url без http(s): %s", u[:120])
+    return None
+
+
+def _append_link_row(
+    rows: list[list[dict[str, Any]]], label: str, url: str
+) -> None:
+    u = _url_for_max_link_button(url)
+    if u:
+        rows.append([_link(label, u)])
 
 
 def _cb(text: str, payload: str) -> dict[str, Any]:
@@ -61,45 +86,37 @@ def attachment_back_only() -> dict[str, Any]:
 
 
 def attachment_channel_and_menu(settings: Settings) -> dict[str, Any]:
-    return _inline_kb(
-        [
-            [_link("📣 Перейти в Telegram-канал Галины", settings.galina_channel_link)],
-            [_cb("🏠 Главное меню", CB_MAIN)],
-        ]
-    )
+    rows: list[list[dict[str, Any]]] = []
+    _append_link_row(rows, "📣 Перейти в Telegram-канал Галины", settings.galina_channel_link)
+    rows.append([_cb("🏠 Главное меню", CB_MAIN)])
+    return _inline_kb(rows)
 
 
 def attachment_shop_and_contact(settings: Settings) -> dict[str, Any]:
-    return _inline_kb(
-        [
-            [_link("🛒 Открыть каталог", settings.shop_catalog)],
-            [_link("✉️ Написать Галине лично в Телеграм", settings.galina_telegram_link)],
-            [_link("✉️ Написать Галине лично в МАХ", settings.galina_max_contact_link)],
-            [_cb("🏠 Главное меню", CB_MAIN)],
-        ]
-    )
+    rows: list[list[dict[str, Any]]] = []
+    _append_link_row(rows, "🛒 Открыть каталог", settings.shop_catalog)
+    _append_link_row(rows, "✉️ Написать Галине лично в Телеграм", settings.galina_telegram_link)
+    _append_link_row(rows, "✉️ Написать Галине лично в МАХ", settings.galina_max_contact_link)
+    rows.append([_cb("🏠 Главное меню", CB_MAIN)])
+    return _inline_kb(rows)
 
 
 def attachment_contacts(settings: Settings) -> dict[str, Any]:
     """Кнопки для раздела «Контакты» (как contacts_inline в Telegram)."""
-    return _inline_kb(
-        [
-            [_link("📣 Telegram-канал", settings.galina_channel_link)],
-            [_link("✉️ Мой личный Telegram", settings.galina_telegram_link)],
-            [_link("✉️ Мой личный MAX (+79287603233)", settings.galina_max_contact_link)],
-            [_cb("🏠 Главное меню", CB_MAIN)],
-        ]
-    )
+    rows: list[list[dict[str, Any]]] = []
+    _append_link_row(rows, "📣 Telegram-канал", settings.galina_channel_link)
+    _append_link_row(rows, "✉️ Мой личный Telegram", settings.galina_telegram_link)
+    _append_link_row(rows, "✉️ Мой личный MAX (+79287603233)", settings.galina_max_contact_link)
+    rows.append([_cb("🏠 Главное меню", CB_MAIN)])
+    return _inline_kb(rows)
 
 
 def attachment_register(settings: Settings) -> dict[str, Any]:
-    return _inline_kb(
-        [
-            [_link("✉️ Написать Галине для регистрации в Телеграм", settings.galina_telegram_link)],
-            [_link("✉️ Написать Галине для регистрации в МАХ", settings.galina_max_contact_link)],
-            [_cb("🏠 Главное меню", CB_MAIN)],
-        ]
-    )
+    rows: list[list[dict[str, Any]]] = []
+    _append_link_row(rows, "✉️ Написать Галине для регистрации в Телеграм", settings.galina_telegram_link)
+    _append_link_row(rows, "✉️ Написать Галине для регистрации в МАХ", settings.galina_max_contact_link)
+    rows.append([_cb("🏠 Главное меню", CB_MAIN)])
+    return _inline_kb(rows)
 
 
 def menu_photo_path() -> Path:

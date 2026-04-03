@@ -146,11 +146,18 @@ async def _route_menu_payload(
         await _send(client, user_id=user_id, chat_id=chat_id, text=text, attachments=ats)
         return
 
+    logger.warning("MAX: неизвестный callback payload=%r (ожидались ключи из главного меню)", payload)
+
 
 async def process_max_update(update: dict, settings: Settings, client: MaxApiClient) -> None:
     """Точка входа для одного JSON Update от MAX (webhook или long polling)."""
     ut = update.get("update_type")
     user_id, chat_id = resolve_outgoing_target(update)
+
+    if ut == "message_callback" and user_id is None and chat_id is None:
+        logger.error(
+            "MAX: message_callback без user_id/chat_id — проверьте JSON (callback.user / message.recipient)"
+        )
 
     if ut == "bot_started":
         u = update.get("user") or {}
@@ -166,12 +173,13 @@ async def process_max_update(update: dict, settings: Settings, client: MaxApiCli
 
     if ut == "message_callback":
         cb = update.get("callback") or {}
-        payload = cb.get("payload")
+        raw_payload = cb.get("payload")
         callback_id = cb.get("callback_id")
         u = cb.get("user") or {}
         wname = ((u.get("first_name") or "друг").strip() or "друг")
         try:
-            if isinstance(payload, str):
+            if isinstance(raw_payload, str):
+                payload = raw_payload.strip()
                 await _route_menu_payload(
                     payload,
                     client,
@@ -180,6 +188,8 @@ async def process_max_update(update: dict, settings: Settings, client: MaxApiCli
                     chat_id=chat_id,
                     welcome_name=wname,
                 )
+            elif raw_payload is not None:
+                logger.warning("MAX: callback payload не строка: %r", raw_payload)
         finally:
             if callback_id:
                 try:
